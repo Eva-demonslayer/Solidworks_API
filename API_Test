@@ -1,0 +1,56 @@
+import win32com.client
+import os
+import time
+
+file_path = r"C:\Users\SALMABX1\OneDrive - Abbott\Desktop\O Demo\One_Ring_to_Rule_Them_All.SLDPRT"
+output_dir = r"C:\Users\SALMABX1\OneDrive - Abbott\Desktop\O Demo"
+
+# connect to the solidworks API
+swApp = win32com.client.Dispatch("SldWorks.Application")
+swApp.Visible = True
+
+
+#checks for Solidworks version and returns a value
+version = swApp.RevisionNumber
+print("Connected to SolidWorks version:", version)
+
+# check to see if the model is active, document is open
+model = swApp.ActiveDoc
+
+if model is None:
+    print("Failed to open the Solidworks document.")
+else:
+    print("Model has a value.")
+
+# check to see if equation manager is accessed correctly
+eqMgr = model.GetEquationMgr
+if eqMgr is None:
+    print("Equation manager not found.")
+else:
+    print("Equation manager accessed.")
+
+# Simple global variable change
+global_var_name = "Outside_Diameter"
+diameters = [22.0, 24.0, 26.0, 28.0, 30.0]
+
+# change the equation for diameter and then save it as a STEP
+for i, val in enumerate(diameters):
+    # calling the method Equation from object eqMgr
+    # and assigning val from diameters list
+    eqMgr.Equation(2, f'"{global_var_name}" = {val}')
+
+    # simple rebuild of file just in case
+    model.EditRebuild3
+
+    # name the files and send to output directory
+    step_path = os.path.join(output_dir, f"Output_{val}.STEP")
+
+    # use SaveAs3 for all STEP data exports
+    model.SaveAs3(step_path, 0, 0)
+    print(f"Exported: {step_path}")
+
+    # sleep in between to avoid overloading RAM
+    time.sleep(2)
+
+swApp.CloseDoc(model.GetTitle)
+print("Booyah! file closed")
